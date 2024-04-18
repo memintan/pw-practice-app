@@ -35,5 +35,5 @@ test('Locator syntax rules',async({page}) => {
     //by partial text match
     page.locator(':text-is("Using the Grid")')
   
-})
+}) 
 
