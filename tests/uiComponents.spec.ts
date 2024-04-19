@@ -136,20 +136,59 @@ test('web tables', async({page}) => {
 
     //2 get the row based on the value in the specific column
     await page.locator('.ng2-smart-pagination-nav').getByText('2').click()
-    const targetRowById = page.locator('.ng2-smart-row', {hasText:'11'}).filter({has: page.locator('td').nth(1).getByText('11')})
+    const targetRowById = page.getByRole('row', {name:'11'}).filter({has: page.locator('td').nth(1).getByText('11')})
     await targetRowById.locator('.nb-edit').click()
-    await targetRowById.locator('input-editor').getByPlaceholder('E-mail').clear()
-    await targetRowById.locator('input-editor').getByPlaceholder('E-mail').fill('test@test.com')
+    await page.locator('input-editor').getByPlaceholder('E-mail').clear()
+    await page.locator('input-editor').getByPlaceholder('E-mail').fill('test@test.com')
     await page.locator('.nb-checkmark').click()
     await expect(targetRowById.locator('td').nth(5)).toHaveText('test@test.com')
 
+    //3 test filter of the table
 
+    const ages = ["20", "30", "40", "200"]
 
+    for(let age of ages){
+        await page.locator('input-filter').getByPlaceholder('Age').clear()
+        await page.locator('input-filter').getByPlaceholder('Age').fill(age)
+        await page.waitForTimeout(300)
 
+        const ageRows = page.locator('tbody tr')
 
+        for(let row of await ageRows.all()){
+            const cellValue = await row.locator('td').last().textContent()
+            if(age == '200'){
+                expect(await page.getByRole('table').textContent()).toContain('No data found')
+            }else{
+            expect(cellValue).toEqual(age)
+            }
+        }
+    }
+})
 
+test('Date Picker', async({page}) => {
+    await page.getByText('Forms').click()
+    await page.getByText('Datepicker').click()
 
+    const calenderInputField = page.getByPlaceholder('Form Picker')
+    await calenderInputField.click()
 
+    let date = new Date()
+    date.setDate(date.getDate() + 500 )
+    const expectedDate = date.getDate().toString()
+    const expectedMonthShort = date.toLocaleString('En-US', {month:'short'})
+    const expectedMonthLong = date.toLocaleString('En-US', {month:'long'})
+    const expectedYear = date.getFullYear()
+    const dateToAssert = `${expectedMonthShort} ${expectedDate}, ${expectedYear}`
 
+    let calendarMonthAndYear = await page.locator('nb-calendar-view-mode').textContent()
+    const expectedMonthAndYear = ` ${expectedMonthLong} ${expectedYear} `
 
+    while(!calendarMonthAndYear.includes(expectedMonthAndYear)){
+        await page.locator('nb-calendar-pageable-navigation [data-name="chevron-right"]').click()
+        calendarMonthAndYear = await page.locator('nb-calendar-view-mode').textContent()
+
+    }
+
+    await page.locator('[class="day-cell ng-star-inserted"]').getByText(expectedDate,{exact: true}).click()
+    await expect(calenderInputField).toHaveValue(dateToAssert)
 })
