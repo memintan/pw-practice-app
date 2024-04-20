@@ -1,13 +1,12 @@
 import {Locator, Page} from "@playwright/test"
+import { HelperBase } from "./helperBase"
 
-export class FormLayoutsPage{
-    
-    private readonly page: Page
+export class FormLayoutsPage extends HelperBase{
 
     constructor(page: Page){
-        this.page = page
+        super(page)
     }
-
+    
     async submitUsingTheGridFormWithCredentialsAndSelectOption(email: string, password: string, optionText: string){
         const usingTheGridForm = this.page.locator('nb-card', {hasText: "using the Grid"})
         await usingTheGridForm.getByRole('textbox', {name: "Email"}).fill(email)
